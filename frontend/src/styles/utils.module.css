@@ -1,0 +1,63 @@
+.blockCenter {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.flexCenter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.width100 {
+    width: 100%;
+}
+
+.fileUploadDialog {
+    background-color: #f1f1f1;
+}
+
+.addButton {
+    display: flex;
+    justify-content: flex-end;
+    position: absolute;
+    bottom: 5px;
+    right: 10px;
+    padding: 3px 3px;
+}
+
+.addTopButton {
+    display: flex;
+    justify-content: flex-end;
+    position: absolute;
+    top: 5px;
+    right: 10px;
+    padding: 3px 3px;
+}
+
+.color {
+    background-color: #ffb31a;
+}
+
+.viewModeButtonsContainerGrid {
+    display: flex;
+    justify-content: flex-end;
+    position: absolute;
+    right: 130px;
+}
+
+.viewModeButtonsContainerList {
+    display: flex;
+    justify-content: flex-end;
+    position: absolute;
+    right: 150px;
+}
+
+.blockTopCenter {
+    display: block;
+    margin-top: -45px;
+    margin-left: auto;
+    margin-right: auto;
+}
