@@ -82,7 +82,7 @@ def handle_request(path_wanted):
     if subdirectories:
         initial_selected_folder = subdirectories[0]
         initial_file_struct = None
-        for root, _, files in os.walk(os.path.join("C:\\Users\\fabi2\\OneDrive\\Desktop\\Betty's idea of doing shit\\data\\images_quick_check\\", initial_selected_folder)):
+        for root, _, files in os.walk(os.path.join("C:\\Users\\fabi2\\OneDrive\\Desktop\\Betty's idea of doing shit\\" + name_of_pacient + "\\images_quick_check\\", initial_selected_folder)):
             initial_file_struct = (root, files)
             break
         if initial_file_struct:
@@ -117,8 +117,8 @@ def handle_request(path_wanted):
 
     # Getting a Collection
     collection = db.patients
-    pacient_id = ObjectId('645430a43b0ec4b7df36aec6')
-    doc = collection.find_one({"_id": pacient_id})
+    pacient_cnp = name_of_pacient
+    doc = collection.find_one({"cnp": pacient_cnp})
 
     # Make sure nodule features are not already initialized
     nodule_volume = []
@@ -324,4 +324,4 @@ def update_info_display(selected_folder_index, selected_feature):
 
 
 if __name__ == "__main__":
-    server.run(debug=True,host='192.168.101.18', port=8080)
+    server.run(debug=True,host='192.168.0.226', port=8000)
