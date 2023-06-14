@@ -225,6 +225,7 @@ const patientsList =
         </>: patientToView && page === "expandedViewCT" ? (
             <ViewPatientCT key={patientToView._id} 
                 patient={patientToView}
+                dashAppContent=""
                 goBack={goBackToListView} 
             />
         ) : patientToView && page === "expandedViewData" ? (

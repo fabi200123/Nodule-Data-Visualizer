@@ -5,16 +5,12 @@ import stylePatient from "../styles/ViewPatient.module.css";
 
 interface ViewPatientProps {
     patient: PatientModel,
+    dashAppContent: string;
     goBack: () => void;
 }
 
-const ViewPatientCT: React.FC<ViewPatientProps> = ({ patient, goBack }) => {
-    const {
-        name,
-        cnp,
-        doctors,
-        description,
-    } = patient;
+const ViewPatientCT: React.FC<ViewPatientProps> = ({ patient, dashAppContent, goBack }) => {
+     const { name, cnp } = patient; // Destructure the name and cnp from the patient object
 
     return (
     <>
@@ -30,7 +26,7 @@ const ViewPatientCT: React.FC<ViewPatientProps> = ({ patient, goBack }) => {
         </label> <br/>
         <div style={{height: '80vh', width: '100vw', overflow: 'auto'}}>
         <iframe
-            src="http://192.168.101.18:8080/data"
+            srcDoc={dashAppContent}
             title="Dash App"
             width="100%"
             height="100%"

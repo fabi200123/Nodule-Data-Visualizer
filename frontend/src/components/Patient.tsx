@@ -22,7 +22,7 @@ interface PatientProps {
     displayListGrid: string,
 }
 
-const Patient = ({patient, onPatientClicked, onDeletePatientClicked, onExpand, onExpandData, className, caller, displayListGrid }: PatientProps) => {
+const Patient = ({ patient, onPatientClicked, onDeletePatientClicked, onExpand, onExpandData, className, caller, displayListGrid }: PatientProps) => {
     const {
         name,
         cnp,
@@ -58,11 +58,11 @@ const Patient = ({patient, onPatientClicked, onDeletePatientClicked, onExpand, o
 
     let doctorsNames: string[];
     doctorsNames = [];
-    for(let i = 0; i < doctors.length; i++){
-        const doctorId = patient.doctors[i];
+    for (let i = 0; i < doctors.length; i++) {
+        const doctorId = doctors[i];
         const searchedDoctor = doctorsAll.find(({ _id }) => _id === doctorId);
-        if (searchedDoctor){
-            if (i !== patient.doctors.length - 1)
+        if (searchedDoctor) {
+            if (i !== doctors.length - 1)
                 doctorsNames.push(searchedDoctor.name + ", ");
             else doctorsNames.push(searchedDoctor.name);
         }
@@ -78,13 +78,13 @@ const Patient = ({patient, onPatientClicked, onDeletePatientClicked, onExpand, o
     return (
         <>
             {showFileUploadDialog &&
-                <FileUploadDialog caller = "CT"
-                    onDismiss={() => setShowFileUploadDialog(false)} 
+                <FileUploadDialog caller="CT"
+                    onDismiss={() => setShowFileUploadDialog(false)}
                     onFilesUploaded={handleFilesUploaded}
-                    patientCNP={patient.cnp} 
+                    patientCNP={cnp}
                 />
             }
-            { displayListGrid === "grid" && 
+            {displayListGrid === "grid" &&
                 <Card
                     className={`${styles.noteCard} ${className}`}
                     onClick={() => onPatientClicked(patient)}>
@@ -146,53 +146,53 @@ const Patient = ({patient, onPatientClicked, onDeletePatientClicked, onExpand, o
                     </Card.Footer>
                 </Card>
             }
-            { displayListGrid === "list" && 
+            {displayListGrid === "list" &&
                 <>
-                <tr key={patient._id}>
-                    <td onClick={() => onPatientClicked(patient)}>
-                        {name}
-                    </td>
-                    <td onClick={() => onPatientClicked(patient)}>
-                        {cnp}
-                    </td>
-                    <td onClick={() => onPatientClicked(patient)}>
-                        {doctorsNames}
-                    </td>
-                    <td onClick={() => onPatientClicked(patient)}>
-                        {createdUpdated}
-                    </td>
-                    <td>
-                        {(caller === 'assistant') && (
-                            <MdDelete
-                                className="text-muted ms-auto"
-                                onClick={(e) => {
-                                    onDeletePatientClicked(patient);
-                                    e.stopPropagation();
-                                }}
-                            />
-                        )}
-                        {caller === 'doctor' && (
-                            <>
-                            <Button className={stylesButton.buttonsAdmin}
-                                onClick={(e) => {
-                                    onExpand ? onExpand(patient) : e.stopPropagation();
-                                    e.stopPropagation();
-                                }}
-                            >
-                                View CT
-                            </Button>
-                            <Button
-                                onClick={(e) => {
-                                    onExpandData ? onExpandData(patient) : e.stopPropagation();
-                                    e.stopPropagation();
-                                }}
-                            >
-                                View Data
-                            </Button>
-                            </>
-                        )}
-                    </td>
-                </tr>
+                    <tr key={patient._id}>
+                        <td onClick={() => onPatientClicked(patient)}>
+                            {name}
+                        </td>
+                        <td onClick={() => onPatientClicked(patient)}>
+                            {cnp}
+                        </td>
+                        <td onClick={() => onPatientClicked(patient)}>
+                            {doctorsNames}
+                        </td>
+                        <td onClick={() => onPatientClicked(patient)}>
+                            {createdUpdated}
+                        </td>
+                        <td>
+                            {(caller === 'assistant') && (
+                                <MdDelete
+                                    className="text-muted ms-auto"
+                                    onClick={(e) => {
+                                        onDeletePatientClicked(patient);
+                                        e.stopPropagation();
+                                    }}
+                                />
+                            )}
+                            {caller === 'doctor' && (
+                                <>
+                                    <Button className={stylesButton.buttonsAdmin}
+                                        onClick={(e) => {
+                                            onExpand ? onExpand(patient) : e.stopPropagation();
+                                            e.stopPropagation();
+                                        }}
+                                    >
+                                        View CT
+                                    </Button>
+                                    <Button
+                                        onClick={(e) => {
+                                            onExpandData ? onExpandData(patient) : e.stopPropagation();
+                                            e.stopPropagation();
+                                        }}
+                                    >
+                                        View Data
+                                    </Button>
+                                </>
+                            )}
+                        </td>
+                    </tr>
                 </>
             }
             <ToastContainer />
@@ -201,3 +201,4 @@ const Patient = ({patient, onPatientClicked, onDeletePatientClicked, onExpand, o
 }
 
 export default Patient;
+

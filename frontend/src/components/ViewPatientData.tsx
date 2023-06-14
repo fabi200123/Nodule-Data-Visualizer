@@ -75,7 +75,8 @@ const ViewPatientData: React.FC<ViewPatientProps> = ({ patient, goBack }) => {
         const fetchNoduleDetails = async () => {
             try {
                 const response = await axios.get(`/api/patients/${patient._id}`);
-                setPatientData(response.data);
+                const { patient: fetchedPatient } = response.data;
+                setPatientData(fetchedPatient);
                 if (response.data.Hemoleucograma_completa) {
                     setAllColumns(Object.keys(response.data.Hemoleucograma_completa[0]));
                 }

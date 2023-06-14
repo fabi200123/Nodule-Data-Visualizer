@@ -6,56 +6,66 @@ import plotly.figure_factory as FF
 import dash
 from dash import dcc, html
 from dash.dependencies import Input, Output, State
-import matplotlib.pyplot as plt
 import base64
 from PIL import Image
-import SimpleITK as sitk
 import scipy.spatial.distance as distance
 import plotly.graph_objects as go
-from flask import Flask, redirect
+from flask import Flask, redirect, request
 from pymongo import MongoClient
 from bson import ObjectId
 from datetime import datetime
+from flask_cors import CORS
+
 
 def timestamp_to_date(timestamp):
-    return datetime.fromtimestamp(int(timestamp)/1000.0).strftime('%Y-%m-%d')
+    return datetime.fromtimestamp(int(timestamp) / 1000.0).strftime('%Y-%m-%d')
+
 
 def get_subdirectories(folder):
     return [d for d in os.listdir(folder) if os.path.isdir(os.path.join(folder, d))]
+
 
 def return_fig(images, threshold, step_size):
     p = images.transpose(2, 1, 0)
     verts, faces, _, _ = marching_cubes(p, threshold, step_size=step_size, allow_degenerate=True)
     x, y, z = zip(*verts)
     colormap = ['rgb(255, 192, 203)', 'rgb(236, 236, 212)']
-    fig = FF.create_trisurf(x=x, y=y, z=z, plot_edges=False, colormap=colormap, simplices=faces, backgroundcolor='rgb(125, 125, 125)', title="3D Visualization of the Nodule")
+    fig = FF.create_trisurf(x=x, y=y, z=z, plot_edges=False, colormap=colormap, simplices=faces,
+                            backgroundcolor='rgb(125, 125, 125)', title="3D Visualization of the Nodule")
     fig.layout.scene.xaxis.title = 'Width'
     fig.layout.scene.yaxis.title = 'Height'
     fig.layout.scene.zaxis.title = 'Depth (Slice Number)'
     return fig
 
-def get_png_files(folder):
-    png_folder = os.path.join(folder + "_GTV-1_mask\\GTV-1_mask")
-    png_files = [os.path.join(png_folder, f) for f in os.listdir(png_folder) if f.endswith(".png")]
-    png_files.sort()
-    return png_files
-
-# Initialize the vectors for features
-nodule_volume = []
-nodule_fractal_dimension = []
-nodule_area = []
-calcification = []
-spiculation = []
-type_of_nodule = []
-initial_fig = None
+def get_folder_paths(cnp):
+    current_directory = os.path.dirname(os.path.abspath(__file__))
+    parent_directory = os.path.dirname(current_directory)
+    static_directory = os.path.join(parent_directory, 'static')
+    cnp_directory = os.path.join(static_directory, cnp)
+    converted_nrrds_folder = os.path.join(cnp_directory, 'converted_nrrds')
+    images_quick_check_folder = os.path.join(cnp_directory, 'images_quick_check')
+    return converted_nrrds_folder, images_quick_check_folder
 
 server = Flask(__name__)
+app = dash.Dash(__name__, server=server, prevent_initial_callbacks=True, url_base_pathname='/visualize/')
+CORS(server)  # Allow cross-origin requests
 
-app = dash.Dash(__name__, server=server, prevent_initial_callbacks='initial_duplicate', url_base_pathname='/visualize/')
+app.layout = html.Div(
+    children=[
+        # Define the structure and content of your app here
+        # ...
 
-@server.route('/<path_wanted>', methods=['GET'])
+        # Example placeholder content
+        html.H1("My Dash App"),
+        html.P("This is the content of my Dash app."),
+    ]
+)
 
-def handle_request(path_wanted):
+@server.route('/', defaults={'path': ''})
+
+# Your Flask route for handling the visualization
+@app.server.route('/visualize', methods=['GET'])
+def visualize():
 
     # Initialize the vectors for features
     global nodule_volume
@@ -65,24 +75,16 @@ def handle_request(path_wanted):
     global spiculation
     global type_of_nodule
 
-    global name_of_pacient
-    global path_to_data
-    global data_folder
-    global subdirectories
-    global png_folder
-
-    name_of_pacient = path_wanted
-    path_to_data = "C:\\Users\\fabi2\\OneDrive\\Desktop\\Betty's idea of doing shit\\"
-    path_to_data += name_of_pacient + "\\"
-    data_folder = path_to_data + "converted_nrrds\\"
+    # Replace with your actual route handling logic
+    cnp = request.args.get('cnp')
+    data_folder, png_folder = get_folder_paths(cnp)
     subdirectories = get_subdirectories(data_folder)
-    png_folder = path_to_data + "images_quick_check\\"
 
     # Initialize imgs with the first subdirectory images
     if subdirectories:
         initial_selected_folder = subdirectories[0]
         initial_file_struct = None
-        for root, _, files in os.walk(os.path.join("C:\\Users\\fabi2\\OneDrive\\Desktop\\Betty's idea of doing shit\\" + name_of_pacient + "\\images_quick_check\\", initial_selected_folder)):
+        for root, _, files in os.walk(os.path.join(png_folder, initial_selected_folder)):
             initial_file_struct = (root, files)
             break
         if initial_file_struct:
@@ -100,12 +102,13 @@ def handle_request(path_wanted):
         initial_image_arr = sitk.GetArrayFromImage(initial_image)
         initial_mask_arr = sitk.GetArrayFromImage(initial_mask)
 
-        initial_image_normalized = (initial_image_arr - np.min(initial_image_arr)) / (np.max(initial_image_arr) - np.min(initial_image_arr))
+        initial_image_normalized = (initial_image_arr - np.min(initial_image_arr)) / (
+                    np.max(initial_image_arr) - np.min(initial_image_arr))
         initial_nodule_arr = initial_image_normalized * initial_mask_arr
 
         initial_fig = return_fig(initial_nodule_arr, threshold=0.25, step_size=1)
 
-#    nodule_volume, nodule_fractal_dimension, nodule_area, calcification, spiculation, type_of_nodule = get_all_features(data_folder, subdirectories) 
+    #    nodule_volume, nodule_fractal_dimension, nodule_area, calcification, spiculation, type_of_nodule = get_all_features(data_folder, subdirectories)
     # Your MongoDB Atlas cluster connection string
     MONGO_CONNECTION_STRING = "mongodb+srv://dianavelciov:parola@cluster0.qqmezlq.mongodb.net/cool_notes_app?retryWrites=true&w=majority"
 
@@ -117,7 +120,7 @@ def handle_request(path_wanted):
 
     # Getting a Collection
     collection = db.patients
-    pacient_cnp = name_of_pacient
+    pacient_cnp = cnp
     doc = collection.find_one({"cnp": pacient_cnp})
 
     # Make sure nodule features are not already initialized
@@ -144,7 +147,8 @@ def handle_request(path_wanted):
                         children=[
                             dcc.Graph(id='graph-with-selector', figure=initial_fig),
                         ],
-                        style={"display": "inline-block", "vertical-align": "top", "width": "40%"}  # Update the style here
+                        style={"display": "inline-block", "vertical-align": "top", "width": "40%"}
+                        # Update the style here
                     ),
                     html.Div(
                         children=[
@@ -165,14 +169,16 @@ def handle_request(path_wanted):
                                 dcc.Graph(id='info-graph'),
                             ]),
                         ],
-                        style={"display": "inline-block", "vertical-align": "top", "margin-left": "200px"}  # Update the style here
+                        style={"display": "inline-block", "vertical-align": "top", "margin-left": "200px"}
+                        # Update the style here
                     ),
                 ],
                 style={"display": "block"}  # Update the style here
             ),
             dcc.Dropdown(
                 id='folder-selector',
-                options=[{'label': subdir, 'value': i} for i, subdir in enumerate(subdirectories)] + [{'label': 'None', 'value': -1}],
+                options=[{'label': subdir, 'value': i} for i, subdir in enumerate(subdirectories)] + [
+                    {'label': 'None', 'value': -1}],
                 value=0,  # Set the initial value to -1, representing no selection
                 style={"max-width": "600px", "margin": "10px"},
             ),
@@ -183,7 +189,8 @@ def handle_request(path_wanted):
                             dcc.Slider(id='png-slider', min=0, max=0, value=0, step=1),
                             html.Img(id='png-viewer', src=''),
                         ],
-                        style={"display": "inline-block", "vertical-align": "top", "width": "30%"}  # Update the style here
+                        style={"display": "inline-block", "vertical-align": "top", "width": "30%"}
+                        # Update the style here
                     ),
                 ],
                 style={"display": "block", "margin-top": "20px"}  # Update the style here
@@ -191,20 +198,20 @@ def handle_request(path_wanted):
         ]
     )
 
-    # And return a response to the caller
-    return app.index()
+    return app.index()  # Redirect to the Dash app route
+
 
 @app.callback(
-    [Output('graph-with-selector', 'figure'),
-    Output('info-text', 'children', allow_duplicate=True),
-    # Output('info-graph', 'figure', allow_duplicate=True),
-    Output('feature-dropdown', 'value'),
-    Output('png-slider', 'max'),
-    Output('png-viewer', 'src', allow_duplicate=True),
-    Output('png-slider', 'value')],
-    [Input('folder-selector', 'value')],
+    [
+        Output('graph-with-selector', 'figure'),
+        Output('info-text', 'children'),
+        Output('feature-dropdown', 'value'),
+        Output('png-slider', 'max'),
+        Output('png-viewer', 'src'),
+        Output('png-slider', 'value')
+    ],
+    [Input('folder-selector', 'value')]
 )
-
 def update_figure(selected_folder_index):
     updated_fig = initial_fig
     slider_value = 0
@@ -245,11 +252,12 @@ def update_figure(selected_folder_index):
 
     return updated_fig, info_display, selected_feature, max_slider_value, png_src, slider_value
 
+
 @app.callback(
     Output('png-viewer', 'src'),
     Input('png-slider', 'value'),
     State('folder-selector', 'value'),
-    prevent_initial_call='initial_duplicate'  # Add this parameter
+    prevent_initial_call=True
 )
 def update_png_viewer(slider_value, selected_folder_index):
     if selected_folder_index != -1:
@@ -263,12 +271,17 @@ def update_png_viewer(slider_value, selected_folder_index):
             return f"data:image/png;base64,{encoded_image.decode()}"
     return ''
 
+
 @app.callback(
-    [Output('info-text', 'children'),
-    Output('info-graph', 'figure')],
-    [Input('folder-selector', 'value'),
-    Input('feature-dropdown', 'value')],
-    prevent_initial_call=True  # Add this parameter
+    [
+        Output('info-text', 'children'),
+        Output('info-graph', 'figure')
+    ],
+    [
+        Input('folder-selector', 'value'),
+        Input('feature-dropdown', 'value')
+    ],
+    prevent_initial_call=True
 )
 def update_info_display(selected_folder_index, selected_feature):
     info_text = ''
@@ -314,14 +327,16 @@ def update_info_display(selected_folder_index, selected_feature):
                     color=['red' if x == selected_folder_index else 'blue' for x in range(len(feature_data))])
     ))
     fig.update_layout(
-    title=selected_feature.capitalize().replace("-", " ") + ' Over Time',
-    xaxis_title="CT Scan Date",
-    yaxis_title=selected_feature.capitalize().replace("-", " ")
+        title=selected_feature.capitalize().replace("-", " ") + ' Over Time',
+        xaxis_title="CT Scan Date",
+        yaxis_title=selected_feature.capitalize().replace("-", " ")
     )
-
 
     return info_text, fig
 
 
 if __name__ == "__main__":
-    server.run(debug=True,host='192.168.0.226', port=8000)
+    server.run(debug=True, host='0.0.0.0', port=3000)
+
+
+

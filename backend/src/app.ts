@@ -11,6 +11,7 @@ import session from "express-session";
 import env from "./util/validateEnv";
 import MongoStore from "connect-mongo";
 import { requiresAuth } from "./middleware/auth";
+import path from 'path';
 
 
 const app = express();
@@ -18,6 +19,9 @@ const app = express();
 app.use(morgan("dev"));
 
 app.use(express.json());
+
+// Serve static files from the frontend build directory
+app.use(express.static(path.resolve(__dirname, '../../frontend/build')));
 
 app.use(session({
     secret: env.SESSION_SECRET,
@@ -31,6 +35,11 @@ app.use(session({
         mongoUrl: env.MONGO_CONNECTION_STRING
     }),
 }));
+
+app.get('/', (req, res) => {
+   res.sendFile(path.join(__dirname, '../../frontend/build', 'index.html'));
+
+});
 
 app.use("/api/users", userRoutes);
 app.use("/api/notes", requiresAuth, notesRoutes);

@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import UserModel from "../models/user";
 import PatientModel from "../models/patient";
 import { assertIsDefined } from "../util/assertIsDefined";
+import axios from "axios";
 
 export const getPatients: RequestHandler = async (req, res, next) => {
     const authenticatedUserId = req.session.userId;
@@ -57,10 +58,25 @@ export const getPatient: RequestHandler = async (req, res, next) => {
             throw createHttpError(404, "Patient not found");
         }
 
-        res.status(200).json(patient);
-    } catch (error) {
-        next(error);
-    }
+        // Make a request to the Dash app to retrieve the HTML content
+        const dashAppUrl = "http://localhost:3000/visualize"; // Replace with the actual URL of your Dash app
+        const response = await axios.get(dashAppUrl, {
+          params: {
+            cnp: patient.cnp // Pass the patient's CNP as a query parameter
+          }
+        });
+
+        // Extract the HTML content from the response data
+        const dashAppContent = response.data;
+
+        // Return the patient JSON and Dash app content as the response
+        res.status(200).json({
+            patient: patient,
+            dashAppContent: dashAppContent
+        });
+        } catch (error) {
+            next(error);
+        }
 };
 
 interface CreatePatientBody {
