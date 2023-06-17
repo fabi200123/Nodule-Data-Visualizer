@@ -24,6 +24,12 @@ def timestamp_to_date(timestamp):
 def get_subdirectories(folder):
     return [d for d in os.listdir(folder) if os.path.isdir(os.path.join(folder, d))]
 
+def get_png_files(folder):
+    png_folder = os.path.join(folder + "_GTV-1_mask\\GTV-1_mask")
+    png_files = [os.path.join(png_folder, f) for f in os.listdir(png_folder) if f.endswith(".png")]
+    png_files.sort()
+    return png_files
+
 
 def return_fig(images, threshold, step_size):
     p = images.transpose(2, 1, 0)
@@ -76,6 +82,10 @@ def visualize():
     global type_of_nodule
 
     # Replace with your actual route handling logic
+    global subdirectories
+    global data_folder
+    global png_folder
+
     cnp = request.args.get('cnp')
     data_folder, png_folder = get_folder_paths(cnp)
     subdirectories = get_subdirectories(data_folder)
@@ -91,6 +101,7 @@ def visualize():
             initial_root, initial_images = initial_file_struct
             imgs = [np.array(Image.open(os.path.join(initial_root, img))) for img in initial_images]
 
+    global initial_fig
     initial_fig = None
     if subdirectories:
         initial_image_nrrd_file = os.path.join(data_folder, subdirectories[0], "image.nrrd")
@@ -202,15 +213,13 @@ def visualize():
 
 
 @app.callback(
-    [
-        Output('graph-with-selector', 'figure'),
-        Output('info-text', 'children'),
-        Output('feature-dropdown', 'value'),
-        Output('png-slider', 'max'),
-        Output('png-viewer', 'src'),
-        Output('png-slider', 'value')
-    ],
-    [Input('folder-selector', 'value')]
+    [Output('graph-with-selector', 'figure'),
+    Output('info-text', 'children', allow_duplicate=True),
+    Output('feature-dropdown', 'value'),
+    Output('png-slider', 'max'),
+    Output('png-viewer', 'src', allow_duplicate=True),
+    Output('png-slider', 'value')],
+    [Input('folder-selector', 'value')],
 )
 def update_figure(selected_folder_index):
     updated_fig = initial_fig
@@ -257,7 +266,7 @@ def update_figure(selected_folder_index):
     Output('png-viewer', 'src'),
     Input('png-slider', 'value'),
     State('folder-selector', 'value'),
-    prevent_initial_call=True
+    prevent_initial_call='initial_duplicate'  # Add this parameter
 )
 def update_png_viewer(slider_value, selected_folder_index):
     if selected_folder_index != -1:
@@ -270,7 +279,6 @@ def update_png_viewer(slider_value, selected_folder_index):
             encoded_image = base64.b64encode(image_bytes)
             return f"data:image/png;base64,{encoded_image.decode()}"
     return ''
-
 
 @app.callback(
     [
@@ -337,6 +345,3 @@ def update_info_display(selected_folder_index, selected_feature):
 
 if __name__ == "__main__":
     server.run(debug=True, host='0.0.0.0', port=3000)
-
-
-
