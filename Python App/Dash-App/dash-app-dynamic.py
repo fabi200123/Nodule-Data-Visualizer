@@ -53,8 +53,9 @@ def get_folder_paths(cnp):
     return converted_nrrds_folder, images_quick_check_folder
 
 server = Flask(__name__)
-app = dash.Dash(__name__, server=server, prevent_initial_callbacks=True, url_base_pathname='/visualize/')
+app = dash.Dash(__name__, server=server, prevent_initial_callbacks='initial duplicate', url_base_pathname='/visualize/')
 CORS(server)  # Allow cross-origin requests
+
 
 app.layout = html.Div(
     children=[
@@ -173,7 +174,7 @@ def visualize():
                                     {'label': 'Spiculation', 'value': 'spiculation'},
                                     {'label': 'Nodule type', 'value': 'nodule-type'},
                                 ],
-                                value='None'  # The default value
+                                value='Nodule Volume'  # The default value
                             ),
                             html.Div(id='info-display', children=[
                                 html.P(id='info-text', style={"font-size": "32px"}),
@@ -188,8 +189,7 @@ def visualize():
             ),
             dcc.Dropdown(
                 id='folder-selector',
-                options=[{'label': subdir, 'value': i} for i, subdir in enumerate(subdirectories)] + [
-                    {'label': 'None', 'value': -1}],
+                options=[{'label': subdir, 'value': i} for i, subdir in enumerate(subdirectories)],
                 value=0,  # Set the initial value to -1, representing no selection
                 style={"max-width": "600px", "margin": "10px"},
             ),
