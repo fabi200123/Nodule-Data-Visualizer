@@ -80,6 +80,5 @@ for i, selected_folder in enumerate(subdirectories):
         "spiculation": spiculation[i].tolist() if isinstance(spiculation[i], np.ndarray) else spiculation[i],
         "type_of_nodule": type_of_nodule[i]
     })
-    print("Data is:", data[i])
 
 result = collection.update_one({"cnp": pacient_cnp}, {"$set": {"Data": data}}, upsert=True)
