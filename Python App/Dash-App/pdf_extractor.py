@@ -4,11 +4,11 @@ import sys
 
 '''
 How to run:
-$ python pdf_extractor .py PACIENT_ID PDF_FILE
+$ python pdf_extractor.py PACIENT_CNP PDF_FILE
 '''
 
 # Arguments
-pacient_cnp = sys.argv[1] # pacient_id here 645430a43b0ec4b7df36aec6
+pacient_cnp = sys.argv[1]
 pdf_file = sys.argv[2]
 
 def split_subfields(value):

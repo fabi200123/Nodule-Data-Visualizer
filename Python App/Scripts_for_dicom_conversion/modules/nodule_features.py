@@ -47,14 +47,33 @@ def get_spiculation(image_arr, mask_arr):
     
     return spiculation
 
-def get_calcification_nodule_type_features(image_arr, mask_arr, nodule_diameter):
+def get_calcification(image_arr, mask_arr, threshold=130):
+    # https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7021007/#:~:text=The%20threshold%20for%20the%20determination%20of,coronary%20calcification%20is%20130%20Hounsfield%20unit%20%28HU%29.
+
+    """
+    Calculate the calcification of the nodule based on HU values.
+
+    :param image_arr: The 3D numpy array representing the image.
+    :param mask_arr: The 3D numpy array representing the mask of the nodule.
+    :param threshold: The HU value threshold for calcification.
+    :return: The calcification level of the nodule.
+    """
+    # Identify the voxels of the nodule
+    nodule_voxels = image_arr[mask_arr > 0]
+
+    # Calculate the percentage of nodule voxels that are above the threshold
+    calcification = np.sum(nodule_voxels > threshold) / nodule_voxels.size
+    calcification_percentage = calcification * 100
+
+    return calcification_percentage
+
+def get_nodule_type_features(image_arr, mask_arr, nodule_diameter):
     image = sitk.GetImageFromArray(image_arr)
     mask = sitk.GetImageFromArray(mask_arr)
 
     features = compute_features(image, mask)
 
     correlation, entropy, contrast, energy, homegenetiy = get_glcm_features(image_arr, mask_arr)
-    calcification = correlation
 
     if nodule_diameter <= 10:
         D1 = -0.665 * correlation + 3.194 * entropy - 2.359 * contrast + 3.194 * energy - 1.986 * homegenetiy
@@ -74,7 +93,7 @@ def get_calcification_nodule_type_features(image_arr, mask_arr, nodule_diameter)
             type_of_nodule = "Malign"
         else:
             type_of_nodule = "Benign"
-    return calcification, type_of_nodule
+    return type_of_nodule
 
 def get_all_features(data_folder, subdirectories):
     nodule_volume = []
@@ -103,7 +122,8 @@ def get_all_features(data_folder, subdirectories):
         nodule_area.append(compute_nodule_area(mask_arr, voxel_spacing))
 
         nodule_diameter = calculate_max_distance(mask_arr, voxel_spacing)
-        calcification_value, type_of_nodule_value = get_calcification_nodule_type_features(image_arr, mask_arr, nodule_diameter)
+        type_of_nodule_value = get_nodule_type_features(image_arr, mask_arr, nodule_diameter)
+        calcification_value = get_calcification(image_arr, mask_arr)
         calcification.append(calcification_value)
         type_of_nodule.append(type_of_nodule_value)
         spiculation.append(get_spiculation(image_arr, mask_arr))
